@@ -1,0 +1,14 @@
+<environments>
+    <environment>
+        <name>dev</name>
+        <url>https://reqres.in</url>
+    </environment>
+    <environment>
+        <name>qa</name>
+        <url>https://reqres.in</url>
+    </environment>
+    <environment>
+        <name>stage</name>
+        <url>https://reqres.in</url>
+    </environment>
+</environments>
