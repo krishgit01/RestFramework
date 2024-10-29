@@ -14,6 +14,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class TestDataLoader {
     private static final Logger logger = LoggerFactory.getLogger("TestDataLoader");
@@ -22,44 +23,117 @@ public class TestDataLoader {
         InputStream inputStream = TestDataLoader.class.getClassLoader().getResourceAsStream(filePath);
         List<TestData> testDataList = new ArrayList<>();
 
+        boolean header = true;
+        boolean newCase = false;
+        List<String> headerList = new ArrayList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
-            String[] headers = null;
-            boolean isHeader = true;
-            TestData currentTestData = null;
-            List<TestStep> testStepList = null;
+            String previousTestCaseID = "";
+            String currentTestCaseId = "";
+            TestData testData = null;
 
             while ((line = br.readLine()) != null) {
-                String[] values = line.split("\\|");
-                if (values.length == 0) continue;
-
-                // If new test case ID, create a new TestData object
-                String testCaseId = values[0].trim();
-                if (!testCaseId.isEmpty()) {
-                    currentTestData = new TestData();
-                    testStepList = new ArrayList<>();
-                    currentTestData.setTestCaseID(testCaseId);
-                    testDataList.add(currentTestData);
+                if (header) {
+                    headerList = Arrays.stream(line.split("\\|")).skip(1).map(m1 -> m1.trim()) // Skip the first empty element
+                            .collect(Collectors.toList());
+                    logger.info("headerList value is : " + headerList);
+                    header = false;
+                    continue;
+                }
+                if (line.length() == 0) continue;
+                String[] data = Arrays.stream(line.split("\\|")).skip(1).toArray(String[]::new);
+                if (data[0].trim().length() > 0) {
+                    currentTestCaseId = data[0].trim();
+                    newCase = true;
+                }
+                if (newCase) {
+                    if (!previousTestCaseID.isEmpty() && testData != null) {
+                        testDataList.add(testData);
+                    }
+                    testData = new TestData();
+                    testData.setTestCaseID(currentTestCaseId);
+                    testData.setStepList(new ArrayList<>());
+                    previousTestCaseID = currentTestCaseId;
+                    newCase = false;
                 }
 
-                if (currentTestData != null) {
-                    TestStep testStep = createStepData(values, headers);
-                    testStepList.add(testStep);
+
+                TestStep testStep = createStepData(headerList, data);
+                if (testData != null) {
+                    testData.getStepList().add(testStep);
                 }
-
-
             }
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            testDataList.add(testData);
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return Arrays.asList(new TestData());
+        for (TestData testData : testDataList) {
+            logger.info(testData.getTestCaseID());
+            for (TestStep s1 : testData.getStepList()) {
+                logger.info(s1.toString());
+            }
+        }
+        return testDataList;
     }
 
-    public static TestStep createStepData(String[] values, String[] headers) {
-        return new TestStep();
+    public static TestStep createStepData(List<String> headers, String[] values) {
+        TestStep tmpTestStep = new TestStep();
+        headers.remove("testCaseId");
+        for (String tmpHeader : headers) {
+            switch (tmpHeader) {
+                case "testStep":
+                    tmpTestStep.setStepId(values[1]);
+                    break;
+                case "testCaseDesc":
+                    tmpTestStep.setStepDesc(values[2]);
+                    break;
+                case "restCall":
+                    tmpTestStep.setRestCall(values[3]);
+                    break;
+                case "header":
+                    tmpTestStep.setHeader(values[4]);
+                    break;
+                case "queryParam":
+                    tmpTestStep.setQueryParam(values[5]);
+                    break;
+                case "pathParam":
+                    tmpTestStep.setPathParam(values[6]);
+                    break;
+                case "reqPayloadFile":
+                    tmpTestStep.setRequestPayloadFileName(values[7]);
+                    break;
+                case "reqPayloadId":
+                    tmpTestStep.setRequestPayloadId(values[8]);
+                    break;
+                case "responsePayload":
+                    tmpTestStep.setResponsePayloadFileName(values[9]);
+                    break;
+                case "responseId":
+                    tmpTestStep.setResponseId(values[10]);
+                    break;
+                case "statusCode":
+                    tmpTestStep.setStatusCode(values[11]);
+                    break;
+                case "expectedResponse":
+                    tmpTestStep.setExpectedEesponse(values[12]);
+                    break;
+                case "addParam1":
+                    tmpTestStep.setAddParam1(values[13]);
+                    break;
+                case "addParam2":
+                    tmpTestStep.setAddParam2(values[14]);
+                    break;
+                case "addParam3":
+                    tmpTestStep.setAddParam3(values[15]);
+                    break;
+
+                default:
+                    logger.info("No such Header is present : " + tmpHeader);
+                    throw new CustomException("No such header : " + tmpHeader);
+            }
+        }
+
+        return tmpTestStep;
     }
 
     @DataProvider(name = "TestData")
@@ -79,10 +153,16 @@ public class TestDataLoader {
         } else {
             //default value to provided
         }
-        loadTestData(sFilePath);
-        return new Object[][]{
-                {new TestData()},
-                {new TestData()}
-        };
+
+        List<TestData> testDataList = loadTestData(sFilePath);
+        String finalSTestcaseId = sTestcaseId;
+        List<Object[]> filteredTestData = testDataList.stream().filter(d1 -> d1.getTestCaseID().equalsIgnoreCase(finalSTestcaseId))
+                        .map(obj -> new Object[]{obj}).toList();
+//        List<Object[]> testCaseList = new ArrayList<>();
+//        for (TestData tmpTestData:filteredTestData){
+//            testCaseList.add(new Object[]{tmpTestData});
+//        }
+
+        return filteredTestData.toArray(new Object[0][]);
     }
 }
