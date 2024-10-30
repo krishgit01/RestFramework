@@ -12,6 +12,7 @@ public class TestStep {
     public String responsePayloadFileName;
     public String responseId;
     public String statusCode;
+    public String expectedResponse;
     public String response;
     public String addParam1;
     public String addParam2;
@@ -107,6 +108,14 @@ public class TestStep {
         this.statusCode = statusCode;
     }
 
+    public String getExpectedResponse() {
+        return expectedResponse;
+    }
+
+    public void setExpectedResponse(String expectedResponse) {
+        this.expectedResponse = expectedResponse;
+    }
+
     public String getResponse() {
         return response;
     }
@@ -169,6 +178,7 @@ public class TestStep {
                 ", responsePayloadFileName='" + responsePayloadFileName + '\'' +
                 ", responseId='" + responseId + '\'' +
                 ", statusCode='" + statusCode + '\'' +
+                ", expectedResponse='" + expectedResponse + '\'' +
                 ", response='" + response + '\'' +
                 ", addParam1='" + addParam1 + '\'' +
                 ", addParam2='" + addParam2 + '\'' +

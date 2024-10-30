@@ -115,7 +115,7 @@ public class TestDataLoader {
                     tmpTestStep.setStatusCode(values[11]);
                     break;
                 case "expectedResponse":
-                    tmpTestStep.setExpectedEesponse(values[12]);
+                    tmpTestStep.setExpectedResponse(values[12]);
                     break;
                 case "addParam1":
                     tmpTestStep.setAddParam1(values[13]);
